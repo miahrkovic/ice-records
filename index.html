@@ -620,7 +620,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName!=='INPUT'&&(e.key===
 
 /* ---------- zvuk ---------- */
 const aBtn=document.getElementById('audioBtn'), aFile=document.getElementById('audioFile');
-let audio=new Audio('glazba.mp3'); audio.loop=true; audio.volume=0.45;
+let audio=new Audio('glazba_1.mp3'); audio.loop=true; audio.volume=0.45;
 function bindAudio(){audio.addEventListener('play',()=>aBtn.classList.add('on'));audio.addEventListener('pause',()=>aBtn.classList.remove('on'))}
 bindAudio();
 aBtn.onclick=(e)=>{
