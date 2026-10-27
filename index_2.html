@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ice Records – Mia Hrković</title>
+<style>
+  :root{
+    --i900:#0b2a55; --i800:#103a75; --i700:#17509b; --i500:#3b86d6; --i300:#9cc7f2; --i100:#e6f1fc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--i900);font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--i900)}
+  #snow{position:fixed;inset:0;z-index:5;pointer-events:none}
+  .deck{position:fixed;inset:0}
+
+  /* ---------- slides ---------- */
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(24px,5vw,80px) clamp(22px,8vw,130px) clamp(64px,10vh,96px);
+    background:linear-gradient(135deg,#f6faff 0%,#d9ebfb 55%,#b6d6f4 100%);
+    opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s;overflow:auto;
+  }
+  .slide.active{opacity:1;visibility:visible}
+  .slide.dark{background:radial-gradient(circle at 25% 20%,#2a6ec0 0%,#0f3d7a 45%,#0b2a55 100%);color:#fff}
+  .slide.dark h2{color:#fff}
+  .slide.dark .tag{color:var(--i300)}
+
+  /* reveal animations (staggered via --d) */
+  .rv{opacity:0;transform:translateY(34px);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0) * 130ms + 150ms)}
+  .rv.l{transform:translateX(-60px)} .rv.r{transform:translateX(60px)} .rv.z{transform:scale(.8)}
+  .active .rv{opacity:1;transform:none}
+
+  .tag{font-size:clamp(12px,1.4vw,16px);letter-spacing:.28em;text-transform:uppercase;color:var(--i500);font-weight:700;margin-bottom:10px}
+  h2{font-size:clamp(28px,5vw,58px);margin-bottom:clamp(14px,3vh,30px);font-weight:800;line-height:1.1;color:var(--i900)}
+  h2 span{color:var(--i500);background:linear-gradient(90deg,var(--i500),#7cc0ff,var(--i500));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite}
+  @keyframes shine{to{background-position:200% center}}
+  p,li{font-size:clamp(16px,2.1vw,25px);line-height:1.5}
+  ul{list-style:none}
+  li{padding-left:1.5em;position:relative;margin-bottom:.55em}
+  li::before{content:"❄";position:absolute;left:0;color:var(--i500);font-size:.85em;top:.15em}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,3vw,40px);align-items:stretch}
+  .card{background:rgba(255,255,255,.78);border:1.5px solid rgba(59,134,214,.35);border-radius:18px;padding:clamp(16px,2.2vw,28px);
+    box-shadow:0 8px 28px rgba(23,80,155,.12);backdrop-filter:blur(4px);transition:transform .3s,box-shadow .3s}
+  .card:hover{box-shadow:0 14px 36px rgba(23,80,155,.25)}
+  .card h3{font-size:clamp(18px,2.3vw,28px);color:var(--i700);margin-bottom:10px}
+  .dark .card{background:rgba(255,255,255,.1);border-color:rgba(156,199,242,.4);color:#fff}
+  .dark .card h3{color:var(--i300)}
+
+  /* ---------- title slide ---------- */
+  .title{align-items:center;text-align:center;overflow:hidden}
+  .vinyl{position:absolute;width:min(80vw,80vh,640px);aspect-ratio:1;border-radius:50%;left:50%;top:46%;margin:calc(min(80vw,80vh,640px) / -2) 0 0 calc(min(80vw,80vh,640px) / -2);
+    background:radial-gradient(circle,#2b6ec0 0 11%,#0a1b38 11.5% 13%,transparent 13%),
+      repeating-radial-gradient(circle,#10192b 0 3px,#1b2740 3px 5px);
+    box-shadow:0 0 80px rgba(156,199,242,.35);animation:spin 9s linear infinite;opacity:.55}
+  .vinyl::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 20%,rgba(255,255,255,.28) 25%,transparent 30% 70%,rgba(255,255,255,.2) 75%,transparent 80%)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .logo{position:relative;font-size:clamp(70px,19vw,210px);font-weight:900;letter-spacing:.06em;line-height:1;
+    background:linear-gradient(180deg,#fff 10%,#9cc7f2 90%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 8px 22px rgba(0,0,0,.45));animation:float 4s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-12px)}}
+  .rec{position:relative;font-size:clamp(20px,4vw,44px);letter-spacing:.45em;text-transform:uppercase;color:var(--i300);margin-top:.1em}
+  .logowrap{position:relative;width:min(62vw,50vh,470px)}
+  .logoimg{display:block;width:100%;height:auto;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 10px 30px rgba(156,199,242,.5))}
+  .title .logowrap.sm{width:min(40vw,30vh,250px)}
+  .typed{position:relative;margin-top:clamp(14px,3vh,30px);min-height:1.6em;font-size:clamp(14px,2vw,24px);color:#fff;letter-spacing:.06em}
+  .typed::after{content:"|";animation:blink 1s steps(2) infinite;margin-left:2px}
+  @keyframes blink{50%{opacity:0}}
+  .who{position:relative;margin-top:clamp(18px,4vh,40px);font-size:clamp(15px,2.2vw,24px)}
+  .who b{display:block;font-size:clamp(22px,3.6vw,40px);margin-bottom:4px}
+  .hint{position:absolute;bottom:clamp(70px,12vh,110px);left:0;right:0;text-align:center;font-size:14px;color:var(--i300);animation:blink 2s ease-in-out infinite}
+
+  /* ---------- about ---------- */
+  .about{display:grid;grid-template-columns:auto 1fr;gap:clamp(16px,3vw,44px);align-items:center}
+  .avatar{width:clamp(110px,18vw,230px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(40px,7vw,90px);font-weight:900;color:#fff;background:conic-gradient(from 180deg,var(--i700),var(--i500),var(--i300),var(--i700));
+    box-shadow:0 0 0 8px rgba(255,255,255,.7),0 14px 40px rgba(23,80,155,.35);animation:pulse 3.2s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 18px rgba(59,134,214,.18),0 14px 40px rgba(23,80,155,.35)}}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .chip{padding:8px 16px;border-radius:999px;background:var(--i700);color:#fff;font-size:clamp(13px,1.6vw,19px);font-weight:600}
+
+  /* ---------- idea ---------- */
+  .eq{display:flex;align-items:flex-end;gap:6px;height:clamp(50px,9vh,90px);margin-bottom:18px}
+  .eq i{display:block;width:clamp(8px,1.2vw,14px);background:linear-gradient(var(--i300),var(--i500));border-radius:4px;animation:eq 1s ease-in-out infinite alternate}
+  @keyframes eq{from{height:12%}to{height:100%}}
+  .quote{font-size:clamp(20px,3.3vw,40px);font-weight:700;color:var(--i700);border-left:6px solid var(--i500);padding-left:clamp(14px,2vw,26px);line-height:1.3;margin-top:clamp(14px,3vh,30px)}
+  .dark .quote{color:#fff;border-color:var(--i300)}
+
+  /* ---------- tonysky ---------- */
+  .duo{display:flex;align-items:center;justify-content:center;gap:clamp(10px,3vw,40px);margin-bottom:clamp(14px,3vh,30px)}
+  .badge{width:clamp(80px,13vw,160px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;
+    font-weight:900;font-size:clamp(26px,4.5vw,56px);color:#fff;background:linear-gradient(135deg,var(--i500),var(--i700));border:3px solid var(--i300);box-shadow:0 0 30px rgba(156,199,242,.5)}
+  .badge small{font-size:clamp(9px,1.1vw,13px);letter-spacing:.15em;font-weight:600;margin-top:2px}
+  .plus{font-size:clamp(30px,5vw,64px);color:var(--i300);animation:spin 6s linear infinite;display:inline-block}
+  .idea-bulb{font-size:clamp(40px,6vw,76px);animation:float 3s ease-in-out infinite}
+
+  /* ---------- timeline ---------- */
+  .tl{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,2vw,26px);margin-top:20px;padding-top:34px}
+  .tl::before{content:"";position:absolute;top:14px;left:0;height:5px;width:0;background:linear-gradient(90deg,var(--i500),var(--i300));border-radius:4px;transition:width 2.2s ease .4s}
+  .active .tl::before{width:100%}
+  .tl .st{position:relative}
+  .tl .st::before{content:"";position:absolute;top:-30px;left:6px;width:22px;height:22px;border-radius:50%;background:#fff;border:5px solid var(--i500);box-shadow:0 0 0 0 rgba(59,134,214,.5);animation:ping 2.4s infinite}
+  @keyframes ping{70%{box-shadow:0 0 0 14px rgba(59,134,214,0)}100%{box-shadow:0 0 0 0 rgba(59,134,214,0)}}
+  .st b{display:block;color:var(--i700);font-size:clamp(15px,2vw,24px);margin-bottom:4px}
+  .st p{font-size:clamp(13px,1.6vw,19px)}
+
+  /* ---------- price bars ---------- */
+  .bars .row{display:grid;grid-template-columns:minmax(130px,38%) 1fr auto;gap:12px;align-items:center;padding:.4em 0;font-size:clamp(13px,1.8vw,21px)}
+  .bars .track{height:clamp(12px,2vh,20px);background:rgba(23,80,155,.12);border-radius:10px;overflow:hidden}
+  .bars .fill{height:100%;width:0;border-radius:10px;background:linear-gradient(90deg,var(--i500),var(--i300));transition:width 1.4s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0) * 130ms + 400ms)}
+  .active .fill{width:var(--w)}
+  .bars b{color:var(--i700);min-width:3.8em;text-align:right}
+  .sub-h{font-size:clamp(16px,2.2vw,26px);font-weight:800;color:var(--i700);margin:6px 0 4px}
+
+  /* ---------- packages ---------- */
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,2vw,28px);align-items:stretch}
+  .pk{text-align:center;position:relative;overflow:hidden}
+  .pk:hover{transform:translateY(-10px) scale(1.03)}
+  .pk .price{font-size:clamp(30px,5vw,60px);font-weight:900;color:var(--i700);margin:6px 0}
+  .pk p{font-size:clamp(13px,1.55vw,18px)}
+  .pk small{display:block;margin-top:10px;color:var(--i500);font-weight:700;font-size:clamp(12px,1.4vw,16px)}
+  .pk.top{border-color:var(--i500);box-shadow:0 0 0 3px rgba(59,134,214,.25),0 14px 40px rgba(23,80,155,.3)}
+  .pk.top::after{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);animation:sweep 3.5s ease-in-out infinite}
+  @keyframes sweep{60%,100%{left:140%}}
+  .crown{font-size:clamp(22px,3vw,34px)}
+
+  /* ---------- numbers ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,2vw,26px);text-align:center}
+  .stat .n{font-size:clamp(40px,8vw,100px);font-weight:900;color:#fff;line-height:1}
+  .stat .t{font-size:clamp(13px,1.8vw,22px);color:var(--i300);margin-top:6px;letter-spacing:.08em;text-transform:uppercase}
+
+  /* ---------- nav ---------- */
+  .nav{position:fixed;left:0;right:0;bottom:0;height:clamp(46px,7vh,60px);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,36px);z-index:10;background:rgba(11,42,85,.9);color:#fff;font-size:14px}
+  .nav button{background:none;border:1.5px solid var(--i300);color:#fff;border-radius:999px;padding:6px 18px;font-size:15px;cursor:pointer;transition:.2s}
+  .nav button:hover{background:var(--i500);transform:scale(1.08)}
+  .dots{display:flex;gap:6px}
+  .dots i{width:8px;height:8px;border-radius:50%;background:rgba(156,199,242,.35);cursor:pointer;transition:.3s}
+  .dots i.on{background:#fff;transform:scale(1.5)}
+  .bar{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--i500),#fff);z-index:11;transition:width .4s}
+
+  @media (max-width:760px){
+    .cols,.three,.about{grid-template-columns:1fr}
+    .tl,.stats{grid-template-columns:1fr 1fr}
+    .slide{justify-content:flex-start;padding-top:34px}
+    .slide.title{justify-content:center}
+    .dots{display:none}
+    .tl::before{display:none}.tl .st::before{display:none}.tl{padding-top:0}
+  }
+
+  /* ---------- novi slajdovi ---------- */
+  .pair{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(10px,2vw,26px);align-items:center;margin-bottom:clamp(8px,1.6vh,16px)}
+  .pair .card{padding:clamp(10px,1.4vw,18px) clamp(14px,2vw,24px)}
+  .pair p{font-size:clamp(13px,1.7vw,21px);line-height:1.35}
+  .pair .arrow{font-size:clamp(22px,3vw,40px);color:var(--i500);animation:nudge 1.6s ease-in-out infinite}
+  @keyframes nudge{50%{transform:translateX(8px)}}
+  .pair .bad{border-left:5px solid #e0607a}
+  .pair .good{border-left:5px solid var(--i500)}
+  .lbl{display:block;font-size:clamp(10px,1.2vw,13px);letter-spacing:.2em;text-transform:uppercase;font-weight:800;margin-bottom:2px}
+  .bad .lbl{color:#c0405a}.good .lbl{color:var(--i500)}
+  .emo{font-size:clamp(36px,6vw,76px);display:block;margin-bottom:6px;animation:float 3.4s ease-in-out infinite}
+  .tl.five{grid-template-columns:repeat(5,1fr)}
+  .why .num{font-size:clamp(40px,6vw,76px);font-weight:900;color:var(--i300);line-height:1}
+  .why .card{text-align:left}
+  .icon-btn{background:none;border:1.5px solid var(--i300);color:#fff;border-radius:999px;width:38px;height:34px;font-size:16px;cursor:pointer;transition:.2s;margin-left:6px}
+  .icon-btn:hover{background:var(--i500)}
+  .icon-btn.on{background:var(--i500)}
+  #notes{position:fixed;left:0;right:0;bottom:clamp(46px,7vh,60px);z-index:9;background:rgba(11,42,85,.95);color:#fff;padding:14px clamp(18px,5vw,60px);font-size:clamp(14px,1.8vw,19px);line-height:1.5;border-top:2px solid var(--i500);transform:translateY(110%);transition:transform .35s;max-height:40vh;overflow:auto}
+  #notes.open{transform:none}
+  #notes b{color:var(--i300);letter-spacing:.15em;text-transform:uppercase;font-size:12px;display:block;margin-bottom:4px}
+  @media (max-width:760px){
+    .pair{grid-template-columns:1fr}.pair .arrow{display:none}
+    .tl.five{grid-template-columns:1fr 1fr}
+  }
+
+  /* ---------- misija, swot, marketing, financije ---------- */
+  .mv{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,3vw,40px)}
+  .mv .card{padding:clamp(20px,3vw,40px)}
+  .mv h3{font-size:clamp(14px,1.6vw,18px);letter-spacing:.25em;text-transform:uppercase;color:var(--i300)}
+  .mv p{font-size:clamp(18px,2.8vw,34px);font-weight:700;line-height:1.3;margin-top:10px}
+  .swot{display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,2vw,22px)}
+  .swot .card{padding:clamp(12px,1.8vw,22px)}
+  .swot h3{display:flex;align-items:center;gap:10px;font-size:clamp(16px,2.1vw,26px)}
+  .swot h3 i{font-style:normal;width:1.6em;height:1.6em;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:.85em}
+  .swot .s i{background:#2a9d6f}.swot .w i{background:#e09a2f}.swot .o i{background:var(--i500)}.swot .t i{background:#d6506a}
+  .swot ul li{font-size:clamp(12px,1.55vw,19px);margin-bottom:.3em}
+  .swot ul li::before{content:"•"}
+  .mk{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(10px,2vw,24px)}
+  .mk .card{text-align:center}
+  .mk .big{font-size:clamp(26px,4vw,50px);font-weight:900;color:var(--i700);margin:6px 0 2px}
+  .mk p{font-size:clamp(12px,1.5vw,18px)}
+  .fin{display:grid;grid-template-columns:1.3fr 1fr;gap:clamp(14px,3vw,40px);align-items:stretch}
+  .vb{display:flex;align-items:flex-end;justify-content:space-around;gap:clamp(10px,2vw,28px);height:clamp(180px,38vh,340px);padding:0 10px}
+  .vb .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;text-align:center}
+  .vb .bar2{width:100%;max-width:130px;height:0;border-radius:12px 12px 0 0;transition:height 1.4s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--d,0)*160ms + 500ms)}
+  .active .vb .bar2{height:var(--h)}
+  .vb .v{font-weight:900;font-size:clamp(15px,2.2vw,28px);margin-bottom:6px;color:var(--i700)}
+  .vb .l{font-size:clamp(12px,1.5vw,18px);margin-top:8px;font-weight:700}
+  .b1{background:linear-gradient(var(--i300),var(--i500))}.b2{background:linear-gradient(#f0a3b2,#d6506a)}.b3{background:linear-gradient(#7fd6b0,#2a9d6f)}
+  .pdv p{font-size:clamp(13px,1.7vw,20px);margin-bottom:.4em;display:flex;justify-content:space-between;gap:10px}
+  .pdv p b{color:var(--i700);white-space:nowrap}
+  .pdv .sum{border-top:2px solid var(--i500);padding-top:.5em;margin-top:.4em;font-weight:800}
+  @media (max-width:760px){.mv,.swot,.fin{grid-template-columns:1fr}.mk{grid-template-columns:1fr 1fr}.vb{height:200px}}
+
+  /* ---------- povezivanje mobitela ---------- */
+  #pair{position:fixed;inset:0;z-index:30;background:rgba(5,20,45,.78);display:none;align-items:center;justify-content:center;padding:18px}
+  #pair.open{display:flex}
+  .pbox{background:linear-gradient(135deg,#f6faff,#d9ebfb);color:var(--i900);border-radius:20px;padding:clamp(18px,3vw,34px);width:min(560px,100%);box-shadow:0 30px 80px rgba(0,0,0,.5);max-height:92vh;overflow:auto}
+  .pbox h3{font-size:clamp(20px,2.6vw,28px);color:var(--i700);margin-bottom:8px}
+  .pbox p{font-size:15px;line-height:1.5;margin-bottom:10px}
+  .pbox .row{display:flex;gap:8px;margin:8px 0}
+  .pbox input{flex:1;padding:10px 12px;border-radius:10px;border:1.5px solid var(--i300);font-size:14px;background:#fff;color:var(--i900);min-width:0}
+  .pbox button{padding:10px 16px;border-radius:10px;border:0;background:var(--i500);color:#fff;font-weight:700;cursor:pointer}
+  .pbox button.ghost{background:transparent;color:var(--i700);border:1.5px solid var(--i300)}
+  #pqr{display:flex;justify-content:center;margin:12px 0;min-height:140px}
+  #pqr canvas,#pqr img{background:#fff;padding:8px;border-radius:10px}
+  .pst{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin:6px 0}
+  .pst i{width:12px;height:12px;border-radius:50%;background:#c0405a;display:inline-block}
+  .pst.ok i{background:#2a9d6f;box-shadow:0 0 0 5px rgba(42,157,111,.25)}
+  .warn{font-size:13px;color:#8a5a00;background:#fff4d6;border-radius:8px;padding:8px 10px;margin-bottom:8px;display:none}
+
+  #start{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 25% 20%,#2a6ec0 0%,#0f3d7a 45%,#0b2a55 100%);transition:opacity .6s,visibility .6s}
+  #start.gone{opacity:0;visibility:hidden}
+  .sbox{text-align:center;color:#fff;padding:20px}
+  .sbox img{width:min(60vw,44vh,360px);height:auto;filter:drop-shadow(0 10px 30px rgba(156,199,242,.5));animation:float 4s ease-in-out infinite}
+  .sbox button{display:block;margin:22px auto 0;padding:16px 36px;border:0;border-radius:999px;background:linear-gradient(135deg,#3b86d6,#17509b);color:#fff;font-size:clamp(18px,2.4vw,26px);font-weight:800;cursor:pointer;box-shadow:0 12px 34px rgba(59,134,214,.5);transition:transform .15s}
+  .sbox button:hover{transform:scale(1.06)}
+  .sbox p{margin-top:16px;font-size:14px;color:#9cc7f2}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="start"><div class="sbox"><img src="logo.png" alt="Ice Records"><button id="startBtn">▶ Pokreni prezentaciju</button><p>Pokreće glazbu i cijeli zaslon · ♪ pauzira glazbu · 📱 povezuje mobitel</p></div></div>
+<canvas id="snow"></canvas>
+<div class="bar" id="bar"></div>
+
+<div class="deck">
+
+  <!-- 1. NASLOV -->
+  <section class="slide dark title">
+    <div class="logowrap rv z" style="--d:0"><img class="logoimg" alt="Ice Records logo" src="logo.png"></div>
+    <div class="typed" id="typed"></div>
+    <div class="who rv" style="--d:5"><b>Mia Hrković</b>direktorica · vježbenička tvrtka · Dugo Selo</div>
+    <div class="hint">pritisni → za početak</div>
+  </section>
+
+  <!-- 2. O MENI -->
+  <section class="slide">
+    <div class="tag rv">Predstavljam se</div>
+    <h2 class="rv" style="--d:1">Ja sam <span>Mia Hrković</span></h2>
+    <div class="about">
+      <div class="avatar rv z" style="--d:2">MH</div>
+      <div>
+        <p class="rv r" style="--d:3">Direktorica i računovotkinja sam vježbeničke tvrtke <b>Ice Records</b>, izdavačke kuće iz Dugog Sela koja glazbenicima pomaže da njihov zvuk stigne do publike.</p>
+        <div class="chips">
+          <span class="chip rv z" style="--d:4">Direktorica</span>
+          <span class="chip rv z" style="--d:4">Računovotkinja</span>
+          <span class="chip rv z" style="--d:5">Izdavačka kuća</span>
+          <span class="chip rv z" style="--d:6">Dugo Selo</span>
+          <span class="chip rv z" style="--d:7">Glazba ❄</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. IDEJA -->
+  <section class="slide dark">
+    <div class="eq rv" style="--d:0" id="eq"></div>
+    <div class="tag rv" style="--d:1">Početak priče</div>
+    <h2 class="rv" style="--d:2">Kako je nastala <span>ideja</span></h2>
+    <p class="rv" style="--d:3">Glazba je uvijek bila dio mog života. Primijetila sam da mnogi talentirani mladi izvođači imaju pjesme, ali ne znaju kako ih profesionalno snimiti, objaviti i predstaviti publici.</p>
+    <div class="quote rv l" style="--d:5">Što ako sve to – od pjesme do koncerta – može biti na jednom mjestu?</div>
+  </section>
+
+  <!-- 4. TONYSKY -->
+  <section class="slide">
+    <div class="tag rv">Ideju nisam smislila sama</div>
+    <h2 class="rv" style="--d:1">Zajedno s <span>TonySkyjem</span></h2>
+    <div class="duo">
+      <div class="badge rv l" style="--d:2">MH<small>DIREKTORICA</small></div>
+      <div class="plus rv z" style="--d:3">❄</div>
+      <div class="badge rv r" style="--d:3">TS<small>TONYSKY</small></div>
+      <div class="idea-bulb rv z" style="--d:5">💡</div>
+    </div>
+    <div class="cols">
+      <div class="card rv l" style="--d:4">
+        <h3>Tko je TonySky?</h3>
+        <p>Pjevač s Dore, izvođač koji zna kako izgleda put glazbenika iznutra. Upravo je njegov pogled bio nedostajući dio slagalice.</p>
+      </div>
+      <div class="card rv r" style="--d:5">
+        <h3>Što nas je spojilo?</h3>
+        <p>Razgovarali smo o tome koliko je mladim izvođačima teško doći do produkcije i publike. Iz tog razgovora nastala je ideja za Ice Records.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- 6. PUT -->
+  <section class="slide">
+    <div class="tag rv">Put do tvrtke</div>
+    <h2 class="rv" style="--d:1">Od ideje do <span>Ice Recordsa</span></h2>
+    <div class="tl">
+      <div class="st rv" style="--d:2"><b>1 · Problem</b><p>Mladi glazbenici nemaju pristupačnu produkciju.</p></div>
+      <div class="st rv" style="--d:4"><b>2 · Ideja</b><p>Izdavačka kuća s cijelim putem do izdanja – zajedno s TonySkyjem.</p></div>
+      <div class="st rv" style="--d:6"><b>3 · Ime</b><p>„Ice“ – čist, hladan zvuk i ledeni rezultati.</p></div>
+      <div class="st rv" style="--d:8"><b>4 · Pokretanje</b><p>Cjenik, paketi, tim i prvi kupci.</p></div>
+    </div>
+  </section>
+
+
+  <!-- PROBLEM I RJEŠENJE -->
+  <section class="slide">
+    <div class="tag rv">Zašto postojimo</div>
+    <h2 class="rv" style="--d:1">Problem i <span>rješenje</span></h2>
+    <div class="pair rv" style="--d:2"><div class="card bad"><span class="lbl">Problem</span><p>Mladi glazbenici nemaju pristupačan studio i produkciju.</p></div><div class="arrow">➜</div><div class="card good"><span class="lbl">Rješenje</span><p>Mix, master i produkcija po cijeni koju mladi mogu platiti.</p></div></div>
+    <div class="pair rv" style="--d:4"><div class="card bad"><span class="lbl">Problem</span><p>Ne znaju kako objaviti pjesmu na digitalne platforme.</p></div><div class="arrow">➜</div><div class="card good"><span class="lbl">Rješenje</span><p>Mi preuzimamo distribuciju i objavu na jednom mjestu.</p></div></div>
+    <div class="pair rv" style="--d:6"><div class="card bad"><span class="lbl">Problem</span><p>Nemaju publiku ni prilike za nastup.</p></div><div class="arrow">➜</div><div class="card good"><span class="lbl">Rješenje</span><p>Organiziramo koncerte i javne nastupe, pa pjesma dobije publiku.</p></div></div>
+  </section>
+
+  <!-- CILJANA PUBLIKA -->
+  <section class="slide dark">
+    <div class="tag rv">Za koga radimo</div>
+    <h2 class="rv" style="--d:1">Naša <span>ciljana publika</span></h2>
+    <div class="three">
+      <div class="card rv z" style="--d:2"><span class="emo">🎤</span><h3>Mladi pjevači</h3><p>Imaju pjesme i glas, ali im treba profesionalna snimka i objava.</p></div>
+      <div class="card rv z" style="--d:3"><span class="emo">🎸</span><h3>Školski bendovi</h3><p>Žele snimiti prvi EP, spot i nastupiti pred pravom publikom.</p></div>
+      <div class="card rv z" style="--d:4"><span class="emo">🎧</span><h3>Autori i producenti</h3><p>Trebaju aranžman, mix i master ili instrumentalne verzije.</p></div>
+    </div>
+  </section>
+
+  <!-- KAKO RADIMO -->
+  <section class="slide">
+    <div class="tag rv">Od pjesme do izdanja</div>
+    <h2 class="rv" style="--d:1">Kako <span>radimo</span></h2>
+    <div class="tl five">
+      <div class="st rv" style="--d:2"><b>1 · Dogovor</b><p>Izvođač donosi pjesmu ili ideju.</p></div>
+      <div class="st rv" style="--d:4"><b>2 · Snimanje</b><p>Studio, aranžman i produkcija.</p></div>
+      <div class="st rv" style="--d:6"><b>3 · Mix i master</b><p>Zvuk dobiva završni "ledeni" sjaj.</p></div>
+      <div class="st rv" style="--d:8"><b>4 · Distribucija</b><p>Objava na digitalnim platformama.</p></div>
+      <div class="st rv" style="--d:10"><b>5 · Nastup</b><p>Spot, koncert i susret s publikom.</p></div>
+    </div>
+  </section>
+
+  <!-- 7. USLUGE I PROIZVODI -->
+  <section class="slide">
+    <div class="tag rv">Što nudimo</div>
+    <h2 class="rv" style="--d:1">Usluge i <span>proizvodi</span></h2>
+    <div class="cols">
+      <div class="card bars">
+        <div class="sub-h rv">Usluge</div>
+        <div class="row rv" style="--d:1"><span>Mix i master</span><div class="track"><div class="fill" style="--w:32%;--d:1"></div></div><b data-count="112" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:2"><span>Produkcija i aranžiranje</span><div class="track"><div class="fill" style="--w:60%;--d:2"></div></div><b data-count="210" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:3"><span>Spotovi (snimanje, montaža)</span><div class="track"><div class="fill" style="--w:100%;--d:3"></div></div><b data-count="350" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:4"><span>Digitalna distribucija</span><div class="track"><div class="fill" style="--w:20%;--d:4"></div></div><b data-count="70" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:5"><span>Koncerti i nastupi</span><div class="track"><div class="fill" style="--w:80%;--d:5"></div></div><b data-count="280" data-suf=" €">0 €</b></div>
+      </div>
+      <div class="card bars">
+        <div class="sub-h rv">Proizvodi</div>
+        <div class="row rv" style="--d:1"><span>Autorske pjesme i tekstovi</span><div class="track"><div class="fill" style="--w:17%;--d:1"></div></div><b data-count="168" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:2"><span>Aranžmani i produkcija</span><div class="track"><div class="fill" style="--w:26%;--d:2"></div></div><b data-count="252" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:3"><span>EP izdanje (3–5 pjesama)</span><div class="track"><div class="fill" style="--w:50%;--d:3"></div></div><b data-count="490" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:4"><span>Album (8–12 pjesama)</span><div class="track"><div class="fill" style="--w:100%;--d:4"></div></div><b data-count="980" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:5"><span>Instrumentalne verzije</span><div class="track"><div class="fill" style="--w:9%;--d:5"></div></div><b data-count="84" data-suf=" €">0 €</b></div>
+        <div class="row rv" style="--d:6"><span>Kolekcionarska izdanja</span><div class="track"><div class="fill" style="--w:13%;--d:6"></div></div><b data-count="126" data-suf=" €">0 €</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. PAKETI -->
+  <section class="slide">
+    <div class="tag rv">Najbolja ponuda</div>
+    <h2 class="rv" style="--d:1">Naši <span>paketi</span></h2>
+    <div class="three">
+      <div class="card pk rv" style="--d:2"><h3>ICE STARTER</h3><div class="price"><span data-count="299" data-suf=" €">0 €</span></div><p>Mix i master + distribucija + instrumental</p><small>idealno za početnike · ušteda 15%</small></div>
+      <div class="card pk top rv" style="--d:3"><div class="crown">👑</div><h3>ICE ARTIST</h3><div class="price"><span data-count="599" data-suf=" €">0 €</span></div><p>Autorska pjesma + produkcija i aranžiranje + mix i master + spot + distribucija</p><small>za ozbiljne izvođače · ušteda 20%</small></div>
+      <div class="card pk rv" style="--d:4"><h3>ICE LEGEND</h3><div class="price"><span data-count="1299" data-suf=" €">0 €</span></div><p>EP izdanje + 2 spota + organizacija koncerta + distribucija + kolekcionarsko izdanje</p><small>kompletna karijera</small></div>
+    </div>
+  </section>
+
+
+  <!-- ZAŠTO ICE RECORDS -->
+  <section class="slide dark why">
+    <div class="tag rv">Naša prednost</div>
+    <h2 class="rv" style="--d:1">Zašto <span>Ice Records</span></h2>
+    <div class="three">
+      <div class="card rv z" style="--d:2"><div class="num">01</div><h3>Sve na jednom mjestu</h3><p>Od autorske pjesme do koncerta, bez traženja pet različitih firmi.</p></div>
+      <div class="card rv z" style="--d:3"><div class="num">02</div><h3>Pristupačne cijene</h3><p>Paketi sa uštedom do 20% i jasan cjenik bez skrivenih troškova.</p></div>
+      <div class="card rv z" style="--d:4"><div class="num">03</div><h3>Izvođači razumiju izvođače</h3><p>Ideja je nastala s pjevačem, pa znamo što glazbenicima stvarno treba.</p></div>
+    </div>
+  </section>
+
+
+
+  <!-- MISIJA I VIZIJA -->
+  <section class="slide dark">
+    <div class="tag rv">Zašto i kamo</div>
+    <h2 class="rv" style="--d:1">Misija i <span>vizija</span></h2>
+    <div class="mv">
+      <div class="card rv l" style="--d:2"><h3>❄ Misija</h3><p>Svakom mladom izvođaču omogućiti profesionalan zvuk i put do publike.</p></div>
+      <div class="card rv r" style="--d:3"><h3>❄ Vizija</h3><p>Postati prva adresa za mlade glazbenike u svom kraju.</p></div>
+    </div>
+  </section>
+
+  <!-- SWOT -->
+  <section class="slide">
+    <div class="tag rv">Iskreno o nama</div>
+    <h2 class="rv" style="--d:1">SWOT <span>analiza</span></h2>
+    <div class="swot">
+      <div class="card s rv z" style="--d:2"><h3><i>S</i>Snage</h3><ul><li>sve usluge na jednom mjestu</li><li>jasan cjenik i paketi</li><li>izvođači koji razumiju izvođače</li></ul></div>
+      <div class="card w rv z" style="--d:3"><h3><i>W</i>Slabosti</h3><ul><li>mala, nova tvrtka bez reputacije</li><li>ograničen budžet za opremu</li></ul></div>
+      <div class="card o rv z" style="--d:4"><h3><i>O</i>Prilike</h3><ul><li>puno mladih talenata bez produkcije</li><li>društvene mreže kao besplatna promocija</li></ul></div>
+      <div class="card t rv z" style="--d:5"><h3><i>T</i>Prijetnje</h3><ul><li>konkurentski studiji i izdavači</li><li>glazbenici snimaju sami kod kuće</li></ul></div>
+    </div>
+  </section>
+
+  <!-- MARKETING -->
+  <section class="slide dark">
+    <div class="tag rv">Kako do kupaca</div>
+    <h2 class="rv" style="--d:1">Marketing <span>plan</span></h2>
+    <div class="mk">
+      <div class="card rv z" style="--d:2"><span class="emo">📸</span><h3>Instagram</h3><div class="big" data-count="500" data-suf="">0</div><p>pratitelja do kraja školske godine</p></div>
+      <div class="card rv z" style="--d:3"><span class="emo">🎬</span><h3>TikTok</h3><div class="big" data-count="12" data-suf="">0</div><p>kratkih videa iz studija mjesečno</p></div>
+      <div class="card rv z" style="--d:4"><span class="emo">🪧</span><h3>Plakati</h3><div class="big" data-count="30" data-suf="">0</div><p>plakata u školama i gradu</p></div>
+      <div class="card rv z" style="--d:5"><span class="emo">🎤</span><h3>Nastupi</h3><div class="big" data-count="2" data-suf="">0</div><p>koncerta za predstavljanje izvođača</p></div>
+    </div>
+  </section>
+
+  <!-- FINANCIJE -->
+  <section class="slide">
+    <div class="tag rv">Računovodstvo u brojkama</div>
+    <h2 class="rv" style="--d:1">Financijski <span>pregled</span></h2>
+    <div class="fin">
+      <div class="card rv l" style="--d:2">
+        <div class="vb">
+          <div class="c"><div class="v"><span data-count="1313" data-suf=" €">0 €</span></div><div class="bar2 b1" style="--h:100%;--d:1"></div><div class="l">Prihodi</div></div>
+          <div class="c"><div class="v"><span data-count="765" data-suf=" €">0 €</span></div><div class="bar2 b2" style="--h:58%;--d:2"></div><div class="l">Troškovi</div></div>
+          <div class="c"><div class="v"><span data-count="548" data-suf=" €">0 €</span></div><div class="bar2 b3" style="--h:42%;--d:3"></div><div class="l">Dobit</div></div>
+        </div>
+      </div>
+      <div class="card pdv rv r" style="--d:3">
+        <h3>PDV obračun</h3>
+        <p>Izlazni PDV (računi kupcima) <b>328,25 €</b></p>
+        <p>Ulazni PDV (računi dobavljača) <b>191,25 €</b></p>
+        <p class="sum">PDV za uplatu državi <b>137,00 €</b></p>
+        <p style="font-size:clamp(11px,1.3vw,15px);color:var(--i700);margin-top:10px;display:block">Iznosi su bez PDV-a, prema 2 izlazna i 2 ulazna računa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. BROJEVI -->
+  <section class="slide dark">
+    <div class="tag rv">Ice Records u brojevima</div>
+    <h2 class="rv" style="--d:1">Sve na <span>jednom mjestu</span></h2>
+    <div class="stats">
+      <div class="stat rv z" style="--d:2"><div class="n" data-count="5">0</div><div class="t">usluga</div></div>
+      <div class="stat rv z" style="--d:3"><div class="n" data-count="6">0</div><div class="t">proizvoda</div></div>
+      <div class="stat rv z" style="--d:4"><div class="n" data-count="3">0</div><div class="t">paketa</div></div>
+      <div class="stat rv z" style="--d:5"><div class="n" data-count="1">0</div><div class="t">zajednička ideja</div></div>
+    </div>
+  </section>
+
+  <!-- 10. ULOGA -->
+  <section class="slide">
+    <div class="tag rv">Iza kulisa</div>
+    <h2 class="rv" style="--d:1">Moja uloga <span>direktorice</span></h2>
+    <div class="cols">
+      <div class="card rv l" style="--d:2">
+        <h3>Svakodnevni poslovi</h3>
+        <ul>
+          <li>vodim sastanke i dijelim zadatke</li>
+          <li>vodim računovodstvo: ulazne i izlazne račune</li>
+          <li>dogovaram suradnju s partnerima</li>
+        </ul>
+      </div>
+      <div class="card rv r" style="--d:3">
+        <h3>Što sam naučila</h3>
+        <ul>
+          <li>odgovornost za cijelu tvrtku</li>
+          <li>timski rad i komunikacija</li>
+          <li>kako ideja postaje pravi posao</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. CILJEVI -->
+  <section class="slide dark">
+    <div class="tag rv">Što dalje</div>
+    <h2 class="rv" style="--d:1">Naši <span>ciljevi</span></h2>
+    <ul>
+      <li class="rv l" style="--d:2">privući nove izvođače i izdati prve EP-ove i albume</li>
+      <li class="rv l" style="--d:3">organizirati koncert i predstaviti se na sajmu vježbeničkih tvrtki</li>
+      <li class="rv l" style="--d:4">surađivati s izvođačima poput TonySkyja</li>
+      <li class="rv l" style="--d:5">postati prepoznatljiva izdavačka kuća u svom kraju</li>
+    </ul>
+  </section>
+
+  <!-- 12. KRAJ -->
+  <section class="slide dark title">
+    <div class="logo rv z" style="font-size:clamp(50px,11vw,120px)">Hvala!</div>
+    <div class="logowrap sm rv z" style="--d:2"><img class="logoimg" alt="Ice Records logo" src="logo.png"></div>
+    <div class="who rv" style="--d:3">Ul. Vladimira Nazora 29, Dugo Selo<br>ice.records.vt@gmail.com<br><br>
+      <i style="color:#9cc7f2">Profesionalna produkcija · Ledeni rezultati · Tvoj zvuk · Naš potpis.</i></div>
+  </section>
+
+</div>
+
+<div id="pair"><div class="pbox">
+  <h3>📱 Poveži mobitel kao upravljač</h3>
+  <p>Otvori ovaj link na mobitelu (ili skeniraj QR kod). Na mobitelu ćeš vidjeti gumbe za slajdove i svoje bilješke.</p>
+  <div class="warn" id="pwarn">Stranica je otvorena kao datoteka s računala. Da bi mobitel radio, prezentaciju stavi na GitHub Pages i otvori je preko web adrese.</div>
+  <div class="row"><input id="plink" readonly><button id="pcopy">Kopiraj</button></div>
+  <div id="pqr"></div>
+  <div class="pst" id="pstat"><i></i><span>Čekam mobitel…</span></div>
+  <div class="row" style="justify-content:flex-end"><button class="ghost" id="pnew">Novi kod</button><button id="pclose">Zatvori</button></div>
+</div></div>
+<div id="notes"><b>Bilješke govornika</b><span id="notesText"></span></div>
+<div class="nav">
+  <button id="prev" aria-label="Prethodni">←</button>
+  <div class="dots" id="dots"></div>
+  <span><span id="count"></span><button class="icon-btn" id="audioBtn" title="Glazba: pusti ili pauziraj (Shift+klik: druga pjesma)">♪</button><button class="icon-btn" id="pairBtn" title="Poveži mobitel (P)">📱</button><button class="icon-btn" id="notesBtn" title="Bilješke govornika (N)">📝</button></span>
+  <input type="file" id="audioFile" accept="audio/*" hidden>
+  <button id="next" aria-label="Sljedeći">→</button>
+</div>
+
+<script>
+/* ---------- postavke ---------- */
+
+/* ---------- slajdovi ---------- */
+const slides=[...document.querySelectorAll('.slide')];
+const bar=document.getElementById('bar'), count=document.getElementById('count'), dots=document.getElementById('dots');
+slides.forEach((_,k)=>{const d=document.createElement('i');d.onclick=()=>show(k);dots.appendChild(d)});
+let i=0;
+
+function countUp(root){
+  root.querySelectorAll('[data-count]').forEach(el=>{
+    const end=+el.dataset.count, suf=el.dataset.suf||'', t0=performance.now(), dur=1600;
+    const step=t=>{const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(end*e)+suf; if(p<1)requestAnimationFrame(step)};
+    el.textContent='0'+suf; setTimeout(()=>requestAnimationFrame(step),500);
+  });
+}
+let typeTimer;
+function typeText(){
+  const el=document.getElementById('typed'), txt='Profesionalna produkcija ❄ Ledeni rezultati ❄ Tvoj zvuk ❄ Naš potpis.';
+  clearInterval(typeTimer); el.textContent=''; let n=0;
+  typeTimer=setInterval(()=>{el.textContent=txt.slice(0,++n); if(n>=txt.length)clearInterval(typeTimer)},45);
+}
+function show(n){
+  i=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,k)=>{
+    const on=k===i;
+    if(on&&!s.classList.contains('active')){s.scrollTop=0}
+    s.classList.toggle('active',on);
+  });
+  [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+  count.textContent=(i+1)+' / '+slides.length;
+  bar.style.width=((i+1)/slides.length*100)+'%';
+  countUp(slides[i]);
+  if(i===0)typeText();
+  try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+}
+document.getElementById('next').onclick=()=>show(i+1);
+document.getElementById('prev').onclick=()=>show(i-1);
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(!document.getElementById('start').classList.contains('gone')){if(e.key==='Enter'||e.key===' '){e.preventDefault();document.getElementById('startBtn').click()}return}
+  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();show(i+1)}
+  if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();show(i-1)}
+  if(e.key==='Home')show(0);
+  if(e.key==='End')show(slides.length-1);
+  if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
+});
+let sx=null;
+document.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)show(i+(dx<0?1:-1));sx=null});
+
+/* ---------- equalizer ---------- */
+const eq=document.getElementById('eq');
+for(let k=0;k<22;k++){const b=document.createElement('i');b.style.animationDuration=(.5+Math.random()*.9)+'s';b.style.animationDelay=(-Math.random())+'s';eq.appendChild(b)}
+
+/* ---------- snijeg ---------- */
+(function(){
+  const c=document.getElementById('snow'), x=c.getContext('2d'); let W,H,fl=[];
+  function size(){W=c.width=innerWidth;H=c.height=innerHeight;fl=Array.from({length:Math.min(90,Math.floor(W/14))},()=>({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,s:.4+Math.random()*1.1,d:Math.random()*6.28}))}
+  size(); addEventListener('resize',size);
+  (function loop(){
+    x.clearRect(0,0,W,H);
+    fl.forEach(f=>{f.y+=f.s;f.d+=.01;f.x+=Math.sin(f.d)*.6;if(f.y>H+5){f.y=-5;f.x=Math.random()*W}
+      x.beginPath();x.arc(f.x,f.y,f.r,0,6.28);x.fillStyle='rgba(255,255,255,'+(.35+f.r/8)+')';x.fill()});
+    requestAnimationFrame(loop);
+  })();
+})();
+
+
+/* ---------- bilješke ---------- */
+const NOTES=[
+ "Pozdravi publiku i predstavi se. Reci naziv tvrtke i da je Ice Records izdavačka kuća iz Dugog Sela.",
+ "Reci tko si: direktorica i računovotkinja. Kratko, ne duže od pola minute.",
+ "Ispričaj osobnu priču: glazba te prati cijeli život, a uočila si da mladi izvođači ne znaju kako do profesionalne objave. Završi pitanjem sa slajda.",
+ "Predstavi TonySkyja i reci kako ste razgovarali o problemima izvođača. Naglasi da je ideja nastala zajedno.",
+ "Objasni četiri koraka: problem, ideja, ime, pokretanje. Reci zašto ime Ice.",
+ "Prođi tri para problem-rješenje. Za svaki reci jedan konkretan primjer.",
+ "Objasni tko su vaši kupci i zašto baš oni trebaju izdavačku kuću.",
+ "Prođi put od pjesme do nastupa, korak po korak.",
+ "Pokaži cjenik. Spomeni najjeftiniju i najskuplju uslugu.",
+ "Objasni tri paketa. Naglasi ICE ARTIST kao najpopularniji i uštedu od 15% i 20%.",
+ "Reci tri razloga zašto odabrati Ice Records, ponajviše da su izvođači tu da razumiju izvođače.",
+ "Pročitaj misiju i viziju polako, svaku rečenicu zasebno.",
+ "Budi iskrena o slabostima, to ostavlja dobar dojam. Za svaku slabost spomeni kako je rješavate.",
+ "Za svaki kanal reci cilj. Spomeni da su Instagram i TikTok besplatni.",
+ "Ovo je tvoj slajd kao računovotkinje. Objasni razliku prihoda i troškova, dobit i PDV obračun (izlazni minus ulazni PDV).",
+ "Pročitaj brojeve naglas: 5 usluga, 6 proizvoda, 3 paketa i 1 zajednička ideja.",
+ "Reci što radiš svaki dan kao direktorica i računovotkinja i što si naučila.",
+ "Navedi ciljeve. Spomeni sajam vježbeničkih tvrtki i buduću suradnju s izvođačima.",
+ "Zahvali publici i pozovi na pitanja."
+];
+const notesEl=document.getElementById('notes'), notesText=document.getElementById('notesText');
+function updNotes(){notesText.textContent=NOTES[i]||''}
+document.getElementById('notesBtn').onclick=()=>{notesEl.classList.toggle('open');document.getElementById('notesBtn').classList.toggle('on')};
+document.addEventListener('keydown',e=>{if(e.target.tagName!=='INPUT'&&(e.key==='n'||e.key==='N')){document.getElementById('notesBtn').click()}});
+
+/* ---------- zvuk ---------- */
+const aBtn=document.getElementById('audioBtn'), aFile=document.getElementById('audioFile');
+let audio=new Audio('glazba.mp3'); audio.loop=true; audio.volume=0.45;
+function bindAudio(){audio.addEventListener('play',()=>aBtn.classList.add('on'));audio.addEventListener('pause',()=>aBtn.classList.remove('on'))}
+bindAudio();
+aBtn.onclick=(e)=>{
+  if(e.shiftKey){aFile.click();return}               // Shift+klik: druga pjesma s računala
+  if(audio.paused)audio.play().catch(()=>{}); else audio.pause();
+};
+aFile.onchange=()=>{
+  const f=aFile.files[0]; if(!f)return;
+  audio.pause(); audio=new Audio(URL.createObjectURL(f)); audio.loop=true; audio.volume=0.45; bindAudio(); audio.play().catch(()=>{});
+};
+/* početni zaslon: klik pokreće glazbu i cijeli zaslon (preglednik traži klik za zvuk) */
+document.getElementById('startBtn').onclick=()=>{
+  document.getElementById('start').classList.add('gone');
+  audio.play().catch(()=>{});
+  try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}catch(e){}
+  show(0);
+};
+
+const _show=show;
+show=function(n){_show(n);updNotes()};
+
+
+/* ---------- daljinski upravljač (ntfy.sh) ---------- */
+(function(){
+  const NTFY='https://ntfy.sh/';
+  const rnd=()=>Array.from(crypto.getRandomValues(new Uint8Array(10)),b=>'abcdefghijkmnpqrstuvwxyz23456789'[b%32]).join('');
+  let room; try{room=localStorage.getItem('ice_room')}catch(e){}
+  if(!room){room=rnd();try{localStorage.setItem('ice_room',room)}catch(e){}}
+  let es=null, seen=new Set();
+  const topic=s=>'icerec-'+room+'-'+s;
+  const pair=document.getElementById('pair'), plink=document.getElementById('plink'), pstat=document.getElementById('pstat');
+  const TITLES=slides.map((s,k)=>{const t=s.querySelector('h2');return t?t.textContent.trim():(k===0?'Naslovni slajd':'Hvala!')});
+
+  function remoteURL(){return new URL('remote.html?room='+room,location.href).href}
+  function drawPair(){
+    plink.value=remoteURL();
+    document.getElementById('pwarn').style.display=location.protocol==='file:'?'block':'none';
+    const q=document.getElementById('pqr'); q.innerHTML='';
+    if(window.QRCode){new QRCode(q,{text:remoteURL(),width:150,height:150,colorDark:'#0b2a55',colorLight:'#ffffff'})}
+    else q.innerHTML='<small>QR kod se učitava s interneta.</small>';
+  }
+  function setConnected(on){pstat.classList.toggle('ok',on);pstat.lastElementChild.textContent=on?'Mobitel je povezan ✓':'Čekam mobitel…'}
+  let lastHello=0;
+  setInterval(()=>{if(Date.now()-lastHello>45000)setConnected(false)},4000);
+
+  function publish(){
+    const msg=JSON.stringify({i:i,n:slides.length,t:TITLES[i],note:NOTES[i]||''});
+    fetch(NTFY+topic('s'),{method:'POST',body:msg}).catch(()=>{});
+  }
+  function handle(cmd){
+    if(cmd==='hello'){lastHello=Date.now();setConnected(true);publish();return}
+    lastHello=Date.now();setConnected(true);
+    if(cmd==='next')show(i+1);
+    else if(cmd==='prev')show(i-1);
+    else if(cmd==='first')show(0);
+    else if(cmd==='last')show(slides.length-1);
+    else if(cmd==='notes')document.getElementById('notesBtn').click();
+    else if(cmd==='audio')document.getElementById('audioBtn').click();
+    else if(cmd.startsWith('goto:'))show(parseInt(cmd.slice(5),10)-1);
+  }
+  function connect(){
+    if(es)es.close(); seen=new Set();
+    es=new EventSource(NTFY+topic('c')+'/sse');
+    es.onmessage=ev=>{
+      let m; try{m=JSON.parse(ev.data)}catch(e){return}
+      if(m.event!=='message'||seen.has(m.id))return; seen.add(m.id);
+      if(Date.now()/1000-m.time>15)return;
+      handle(String(m.message).trim());
+    };
+  }
+  document.getElementById('pairBtn').onclick=()=>{drawPair();pair.classList.add('open')};
+  document.getElementById('pclose').onclick=()=>pair.classList.remove('open');
+  document.getElementById('pcopy').onclick=()=>{plink.select();try{navigator.clipboard.writeText(plink.value)}catch(e){document.execCommand('copy')}};
+  document.getElementById('pnew').onclick=()=>{room=rnd();try{localStorage.setItem('ice_room',room)}catch(e){}connect();drawPair();setConnected(false)};
+  document.addEventListener('keydown',e=>{if(e.target.tagName!=='INPUT'&&(e.key==='p'||e.key==='P'))document.getElementById('pairBtn').click(); if(e.key==='Escape')pair.classList.remove('open')});
+  const _s=show; show=function(n){_s(n);publish()};
+  connect(); publish();
+})();
+
+show((parseInt(location.hash.slice(1))||1)-1);
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</body>
+</html>
